@@ -1,4 +1,4 @@
-
+import dj_database_url
 import os
 from pathlib import Path
 from decouple import config, Csv 
@@ -32,7 +32,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-   
+    
     'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -64,24 +64,39 @@ TEMPLATES = [
 WSGI_APPLICATION = 'resonate.wsgi.application'
 
 
+# ----------------------------------------------------------------------
+# UPDATED DATABASES CONFIGURATION FOR RENDER/POSTGRESQL
+# ----------------------------------------------------------------------
 
+# This configuration checks for the DATABASE_URL environment variable, 
+# which will be set on Render with your PostgreSQL connection string.
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql', 
-        'NAME': config('DB_NAME'), 
-        'USER': config('DB_USER'), 
-        'PASSWORD': config('DB_PASSWORD'), 
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT', cast=int),
+# If the app is run on Render, DATABASE_URL is used.
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=config('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
+# Otherwise (e.g., local development), fall back to SQLite.
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+# ----------------------------------------------------------------------
+# END UPDATED DATABASES CONFIGURATION
+# ----------------------------------------------------------------------
 
 
-
-
-AUTH_PASSWORD_VALIDATORS = [...]
-
+AUTH_PASSWORD_VALIDATORS = [
+    # ... (Keep your original validators here)
+]
 
 
 LANGUAGE_CODE = 'en-us'
@@ -112,4 +127,3 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-
