@@ -1,0 +1,8 @@
+# Exclude environment and compiled files
+venv/
+__pycache__/
+*.pyc
+*.sqlite3
+
+# CRITICAL: Exclude local secrets file
+.env
