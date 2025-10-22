@@ -11,6 +11,7 @@
 
 /* ================= GLOBAL ================= */
 body {
+    background-color: red !important; /* TEMPORARY TEST COLOR */
     background: #f0f2f5; /* Light gray background */
     font-family: 'Poppins', sans-serif;
     color: #222;
