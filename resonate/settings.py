@@ -1,41 +1,58 @@
 import dj_database_url
 import os
 from pathlib import Path
-from decouple import config, Csv 
+from decouple import config, Csv
 
-
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # ----------------------------------------------------------------------
-# ENVIRONMENT CONFIGURATION (FIX FOR RENDER CRASH)
+# ENVIRONMENT & SECURITY CONFIGURATION (CRITICAL FOR RENDER DEPLOYMENT)
 # ----------------------------------------------------------------------
 
 # SECRET_KEY MUST be set as an environment variable on Render
 SECRET_KEY = config('SECRET_KEY')
 
-# DEBUG must be set to False on Render (in environment variables)
-# We default to True for local development if not specified
+# DEBUG must be set to False on Render
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 
 if DEBUG:
     # Local Development: Allow localhost and standard IP addresses
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '::1']
+    # CSRF settings are only critical in production, but good practice locally
+    CSRF_TRUSTED_ORIGINS = []
 else:
-    # Production: Require ALLOWED_HOSTS to be explicitly set on Render
-    # e.g., 'resonate-33s5.onrender.com'
-    # It will read the value from the environment variable set on Render.
+    # Production: Use the primary domain from the environment variables.
+    # We use a CSV parser to convert the comma-separated string from the 
+    # environment into a Python list.
+    # The domain name must be stored in the ENV variable WITHOUT 'https://'.
     ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
-    # Ensure all your production configuration is applied when DEBUG is False:
-    CSRF_TRUSTED_ORIGINS = ['https://' + host for host in ALLOWED_HOSTS if host]
+    
+    # 💥 CRITICAL CHECK: If ALLOWED_HOSTS is not empty, set CSRF_TRUSTED_ORIGINS
+    # CSRF_TRUSTED_ORIGINS requires the 'https://' prefix.
+    # Added fallback to RENDER_EXTERNAL_URL for robustness on Render
+    RENDER_URL = os.environ.get('RENDER_EXTERNAL_URL')
+    
+    # Create the list of trusted origins for CSRF protection
+    trusted_origins = ['https://' + host for host in ALLOWED_HOSTS if host]
+    if RENDER_URL and 'https://' + RENDER_URL not in trusted_origins:
+        trusted_origins.append('https://' + RENDER_URL)
+        
+    CSRF_TRUSTED_ORIGINS = trusted_origins
+    
+    # Force connection over HTTPS
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # SECURE_HSTS_SECONDS = 31536000 # Uncomment after initial testing
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True # Uncomment after initial testing
+    # SECURE_HSTS_PRELOAD = True # Uncomment after initial testing
     
 # ----------------------------------------------------------------------
-# END ENVIRONMENT CONFIGURATION
+# END ENVIRONMENT & SECURITY CONFIGURATION
 # ----------------------------------------------------------------------
 
 
@@ -92,14 +109,13 @@ WSGI_APPLICATION = 'resonate.wsgi.application'
 # DATABASES CONFIGURATION (FIX FOR RENDER CRASH)
 # ----------------------------------------------------------------------
 
-# This configuration checks for the DATABASE_URL environment variable 
-# and correctly uses dj_database_url to configure PostgreSQL for Render.
+# dj_database_url.config() will automatically read from the DATABASE_URL 
+# environment variable if it exists.
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
-            # No 'default=config('DATABASE_URL')' needed; it reads from os.environ
             conn_max_age=600,
-            ssl_require=True,
+            ssl_require=True, # Critical for Render's PostgreSQL connection
         )
     }
 # Otherwise (e.g., local development), fall back to SQLite.
@@ -117,7 +133,18 @@ else:
 
 
 AUTH_PASSWORD_VALIDATORS = [
-    # ... (Keep your original validators here)
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
 
@@ -128,9 +155,8 @@ USE_TZ = True
 
 
 # ----------------------------------------------------------------------
-# STATIC FILES CONFIGURATION (FIX FOR CSS ISSUE)
+# STATIC FILES CONFIGURATION (FOR WHITENOISE/RENDER)
 # ----------------------------------------------------------------------
-# WhiteNoise serves static files in production from STATIC_ROOT.
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") # Where collectstatic puts files
