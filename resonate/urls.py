@@ -1,18 +1,6 @@
 """
 URL configuration for resonate project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+...
 """
 from django.contrib import admin
 from django.urls import path, include
@@ -32,5 +20,12 @@ urlpatterns = [
     path("", landing_view, name="landing"),
 ]
 
+# In a production environment (DEBUG=False), Django's built-in static handler 
+# and media handler is disabled. WhiteNoise handles STATIC. 
+# It's generally NOT RECOMMENDED to handle MEDIA files this way in production,
+# but if you must, this line is only used for local development (which is correct).
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # The line below is a good fallback for static files in development
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+    urlpatterns += staticfiles_urlpatterns()
