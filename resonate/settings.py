@@ -24,33 +24,29 @@ if DEBUG:
     # CSRF settings are only critical in production, but good practice locally
     CSRF_TRUSTED_ORIGINS = []
 else:
-    # Production: Use the primary domain from the environment variables.
-    # We use a CSV parser to convert the comma-separated string from the 
-    # environment into a Python list.
-    # The domain name must be stored in the ENV variable WITHOUT 'https://'.
-    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
+    # Production: Get the ALLOWED_HOSTS string from the environment.
+    ALLOWED_HOSTS_STRING = config('ALLOWED_HOSTS', default='')
     
-    # 💥 CRITICAL CHECK: If ALLOWED_HOSTS is not empty, set CSRF_TRUSTED_ORIGINS
+    # Manually split the string by commas and strip spaces (more reliable than Csv() for single values)
+    # This creates the required Python list: ['resonate-33s5.onrender.com']
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STRING.split(',') if host.strip()]
+
+    # 💥 CRITICAL CHECK: Define CSRF_TRUSTED_ORIGINS
     # CSRF_TRUSTED_ORIGINS requires the 'https://' prefix.
-    # Added fallback to RENDER_EXTERNAL_URL for robustness on Render
+    
+    # Create the list of trusted origins from the host list
+    CSRF_TRUSTED_ORIGINS = ['https://' + host for host in ALLOWED_HOSTS]
+    
+    # Add RENDER_EXTERNAL_URL for robustness on Render, if it exists
     RENDER_URL = os.environ.get('RENDER_EXTERNAL_URL')
-    
-    # Create the list of trusted origins for CSRF protection
-    trusted_origins = ['https://' + host for host in ALLOWED_HOSTS if host]
-    if RENDER_URL and 'https://' + RENDER_URL not in trusted_origins:
-        trusted_origins.append('https://' + RENDER_URL)
+    if RENDER_URL and 'https://' + RENDER_URL not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append('https://' + RENDER_URL)
         
-    CSRF_TRUSTED_ORIGINS = trusted_origins
-    
     # Force connection over HTTPS
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    # SECURE_HSTS_SECONDS = 31536000 # Uncomment after initial testing
-    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True # Uncomment after initial testing
-    # SECURE_HSTS_PRELOAD = True # Uncomment after initial testing
-    
 # ----------------------------------------------------------------------
 # END ENVIRONMENT & SECURITY CONFIGURATION
 # ----------------------------------------------------------------------
