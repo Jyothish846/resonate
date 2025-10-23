@@ -7,7 +7,6 @@ from decouple import config, Csv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-
 SECRET_KEY = config('SECRET_KEY')
 
 
@@ -15,7 +14,6 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
-
 
 
 # Application definition
@@ -32,9 +30,12 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    # 1. SECURITY MIDDLEWARE MUST BE FIRST FOR SECURITY HEADERS
     'django.middleware.security.SecurityMiddleware',
+    
+    # 2. WHITENOISE MUST COME AFTER SECURITY MIDDLEWARE
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,13 +66,11 @@ WSGI_APPLICATION = 'resonate.wsgi.application'
 
 
 # ----------------------------------------------------------------------
-# UPDATED DATABASES CONFIGURATION FOR RENDER/POSTGRESQL
+# DATABASES CONFIGURATION 
 # ----------------------------------------------------------------------
 
 # This configuration checks for the DATABASE_URL environment variable, 
 # which will be set on Render with your PostgreSQL connection string.
-
-# If the app is run on Render, DATABASE_URL is used.
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
@@ -90,7 +89,7 @@ else:
     }
 
 # ----------------------------------------------------------------------
-# END UPDATED DATABASES CONFIGURATION
+# END DATABASES CONFIGURATION
 # ----------------------------------------------------------------------
 
 
@@ -105,10 +104,20 @@ USE_I18N = True
 USE_TZ = True
 
 
+# STATIC FILES CONFIGURATION FOR WHITENOISE/RENDER
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' 
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'), 
+]
+
+# Define the storage backend explicitly for WhiteNoise (modern practice)
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
