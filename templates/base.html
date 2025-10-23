@@ -5,46 +5,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Resonate{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'accounts/css/style.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    {% block extra_head %}{% endblock extra_head %}
+
+    {# CRITICAL FIX: Load style.css using the full static path (static/css/style.css), 
+       and add a cache-busting version number (v=1.2) to force the browser 
+       to download the latest file instead of using old, cached versions. #}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=1.2">
+    
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-
-<nav class="navbar">
-    <div class="content-wrapper nav-content-wrapper"> 
-        <div class="nav-left">
-            <div class="brand">
-                <img src="{% static 'accounts/logo.png' %}" alt="Logo" class="brand-icon">
-                <span class="brand-name">Resonate</span>
-            </div>
+    <header class="navbar">
+        <div class="logo">Resonate</div>
+        <nav class="nav-links">
             {% if user.is_authenticated %}
-                <a href="{% url 'accounts:feed' %}">Feed</a>
-                <a href="{% url 'accounts:search_musicians' %}">Search</a>
+                <a href="{% url 'feed' %}">Feed</a>
+                <a href="{% url 'search' %}">Search</a>
             {% endif %}
-        </div>
-        <div class="nav-right">
+        </nav>
+        <div class="user-actions">
             {% if user.is_authenticated %}
-                <a href="{% url 'accounts:post_create' %}" class="btn btn-sm btn-primary">Create Post</a>
-                <a href="{% url 'accounts:profile_with_username' user.username %}">{{ user.username }}</a>
-                <a href="{% url 'accounts:logout' %}">Logout</a>
+                <a href="{% url 'create_post' %}" class="btn-primary">Create Post</a>
+                <a href="{% url 'profile' user.username %}" class="user-link">{{ user.username }}</a>
+                <a href="{% url 'logout' %}" class="user-link">Logout</a>
             {% else %}
-                <a href="{% url 'accounts:login' %}">Login</a>
-                <a href="{% url 'accounts:signup' %}">Sign Up</a>
+                <a href="{% url 'login' %}" class="btn-primary">Login / Sign Up</a>
             {% endif %}
         </div>
-    </div>
-</nav>
+    </header>
 
-<main class="page-content"> 
-    {% block content %}{% endblock content %}
-</main>
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
 
-<footer class="app-footer">
-    &copy; {{ now|date:"Y" }} Resonate. All rights reserved.
-</footer>
+    <footer class="footer">
+        &copy; 2025 Resonate. All rights reserved.
+    </footer>
 
-{% block extra_js %}{% endblock extra_js %}
-
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
