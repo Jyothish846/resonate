@@ -159,7 +159,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") # Where collectstatic puts files
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'), # Where Django looks for static files locally
+    os.path.join(BASE_DIR, 'resonate/static'), # Where Django looks for static files locally
 ]
 
 # Define the storage backend explicitly for WhiteNoise (modern practice)
