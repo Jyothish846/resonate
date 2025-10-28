@@ -8,7 +8,12 @@ class Profile(models.Model):
     location = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
   
-    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True) 
+    avatar = models.ImageField(
+        upload_to='avatars/', 
+        default='accounts/default_profile.png',  
+        blank=True, 
+        null=True
+    )
 
     def __str__(self):
         return f"{self.user.username}'s profile"
