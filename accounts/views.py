@@ -10,6 +10,9 @@ from django.urls import reverse
 from django.contrib import messages
 import logging
 
+# Initialize logger globally at the top of the module
+logger = logging.getLogger(__name__)
+
 
 def home_view(request):
     return render(request, 'accounts/home.html')
@@ -207,6 +210,7 @@ def feed(request):
     comments_by_post = {post.id: Comment.objects.filter(post=post).order_by('-created_at') for post in posts} 
 
     if request.method == "POST" and "comment" in request.POST:
+        # NOTE: If you add comment processing here, ensure it returns a redirect!
         pass
 
     return render(request, "accounts/feed.html", {
@@ -308,9 +312,8 @@ def search_musicians(request):
     
     return render(request, "accounts/search.html", {"query": query, "results": results})
 
+# View for displaying a single post and handling its comments
 @login_required
-logger = logging.getLogger(__name__)
-
 def view_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     comment_form = CommentForm() # Initialize the form for GET/default
@@ -337,9 +340,12 @@ def view_post(request, post_id):
             else:
                 comment_form = form
                 messages.error(request, "Failed to add comment. Please fix the errors below.")
+                
+    # Final render statement that always returns an HttpResponse object
     context = {
         'post': post,
         'comment_form': comment_form,
-        
+        # Fetch comments for display in the template
+        'comments': Comment.objects.filter(post=post).select_related('user').order_by('created_at')
     }
     return render(request, "accounts/view_post.html", context)
