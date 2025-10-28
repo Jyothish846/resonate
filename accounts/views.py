@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from urllib3 import request
 from .forms import SignUpForm, ProfileForm, PostForm, CommentForm, EditProfileForm
 from .models import Profile, Follow, Post, Like, Comment
 from django.db.models import Q, Prefetch
@@ -328,15 +329,27 @@ def view_post(request, post_id):
                 comment = form.save(commit=False)
                 comment.user = request.user 
                 comment.post = post
-                comment.save()
-                messages.success(request, "Comment added successfully!")
-                return redirect('accounts:view_post', post_id=post.id)
+
+                try:
+                    comment.save()
+                    messages.success(request, "Comment added successfully!")
+                    return redirect('accounts:view_post', post_id=post.id)
+                
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Error saving comment: {e}")
+                    messages.error(request, "An internal error occurred while saving your comment.")
+                    
+                    
+                    comment_form = form 
             else:
                 comment_form = form
+                messages.error(request, "Failed to add comment. Please check the errors below.")
 
-    context = {
-        "post": post,
-        "is_liked_by_user": is_liked_by_user, 
-        "comment_form": comment_form,
-    }
-    return render(request, "accounts/view_post.html", context)
+        context = {
+            "post": post,
+            "is_liked_by_user": is_liked_by_user, 
+            "comment_form": comment_form,
+        }
+        return render(request, "accounts/view_post.html", context)
