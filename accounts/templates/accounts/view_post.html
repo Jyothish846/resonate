@@ -11,19 +11,21 @@
         
         <div class="post-header">
             
-            <a href="{% url 'accounts:profile' post.author.username %}" class="post-avatar-link">
-            {% if post.author.profile.avatar.url %} 
-                <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}'s avatar" class="post-avatar">
-            {% else %}
-                <img src="{% static 'accounts/default_avatar.png' %}" alt="Default avatar" class="post-avatar">
-            {% endif %}
-        </a>
+            {% if post.author_id %}
+                <a href="{% url 'accounts:profile' post.author.username %}" class="post-avatar-link">
+                    {# Use .avatar.url as the robust check for the profile image #}
+                    {% if post.author.profile.avatar.url %}
+                        <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}'s avatar" class="post-avatar">
+                    {% else %}
+                        <img src="{% static 'accounts/default-profile.png' %}" alt="Default avatar" class="post-avatar">
+                    {% endif %}
+                </a>
                 <div class="post-meta">
                     <a href="{% url 'accounts:profile' post.author.username %}" class="post-username">{{ post.author.username }}</a>
                     <span class="post-timestamp">{{ post.created_at|timesince }} ago</span>
                 </div>
             {% else %}
-                <img src="{% static 'accounts/default_profile.png' %}" alt="Deleted User" class="post-avatar">
+                <img src="{% static 'accounts/default-profile.png' %}" alt="Deleted User" class="post-avatar">
                 <div class="post-meta">
                     <span class="post-username deleted-user-text">Deleted User</span>
                     <span class="post-timestamp">{{ post.created_at|timesince }} ago</span>
@@ -83,7 +85,8 @@
                         
                         {% if comment.user_id %}
                             <a href="{% url 'accounts:profile' comment.user.username %}" class="comment-avatar-link">
-                                {% if comment.user.profile.avatar %}
+                                {# Safer check: if comment.user.profile is accessible and has an avatar #}
+                                {% if comment.user.profile.avatar.url %} 
                                     <img src="{{ comment.user.profile.avatar.url }}" alt="{{ comment.user.username }}'s avatar" class="comment-avatar">
                                 {% else %}
                                     <img src="{% static 'accounts/default-profile.png' %}" alt="Default avatar" class="comment-avatar">
@@ -120,16 +123,5 @@
     </div>
 
 </div>
-{% if comment.user_id %}
-    <a href="{% url 'accounts:profile' comment.user.username %}" class="comment-avatar-link">
-        {# Safer check: if comment.user.profile is accessible and has an avatar #}
-        {% if comment.user.profile.avatar.url %} 
-            <img src="{{ comment.user.profile.avatar.url }}" alt="{{ comment.user.username }}'s avatar" class="comment-avatar">
-        {% else %}
-            <img src="{% static 'accounts/default-profile.png' %}" alt="Default avatar" class="comment-avatar">
-        {% endif %}
-    </a>
-{% else %}
-    <img src="{% static 'accounts/default-profile.png' %}" alt="Deleted User" class="comment-avatar">
-{% endif %}
+
 {% endblock content %}

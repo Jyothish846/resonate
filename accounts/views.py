@@ -210,7 +210,6 @@ def feed(request):
     comments_by_post = {post.id: Comment.objects.filter(post=post).order_by('-created_at') for post in posts} 
 
     if request.method == "POST" and "comment" in request.POST:
-        # NOTE: If you add comment processing here, ensure it returns a redirect!
         pass
 
     return render(request, "accounts/feed.html", {
@@ -312,6 +311,7 @@ def search_musicians(request):
     
     return render(request, "accounts/search.html", {"query": query, "results": results})
 
+
 # View for displaying a single post and handling its comments
 @login_required
 def view_post(request, post_id):
@@ -345,7 +345,7 @@ def view_post(request, post_id):
                 
     # 3. Prepare Context for Render (GET Request or POST Failure)
     
-    # CRITICAL ADDITION: Check if the user has liked the post for template logic
+    # Check if the user has liked the post for template logic
     post.is_liked_by_user = Like.objects.filter(post=post, user=request.user).exists()
     
     # Fetch comments, ensuring the user profile is pre-fetched for efficiency
