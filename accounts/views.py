@@ -315,9 +315,11 @@ def search_musicians(request):
 # View for displaying a single post and handling its comments
 @login_required
 def view_post(request, post_id):
+    # 1. Fetch Post and Comments
     post = get_object_or_404(Post, id=post_id)
     comment_form = CommentForm() # Initialize the form for GET/default
 
+    # 2. Handle POST Request (Comment Submission)
     if request.method == "POST":
         if 'comment_submit' in request.POST:
             form = CommentForm(request.POST)
@@ -333,7 +335,7 @@ def view_post(request, post_id):
                     return redirect('accounts:view_post', post_id=post.id)
                 
                 except Exception as e:
-                    # Logs error and falls through to the render statement below
+                    # Logs error and falls through to the final render statement
                     logger.error(f"Database error saving comment: {e}")
                     messages.error(request, "An internal database error prevented your comment from being saved.")
                     comment_form = form # Use the error-filled form for re-rendering
@@ -341,11 +343,20 @@ def view_post(request, post_id):
                 comment_form = form
                 messages.error(request, "Failed to add comment. Please fix the errors below.")
                 
-    # Final render statement that always returns an HttpResponse object
+    # 3. Prepare Context for Render (GET Request or POST Failure)
+    
+    # CRITICAL ADDITION: Check if the user has liked the post for template logic
+    post.is_liked_by_user = Like.objects.filter(post=post, user=request.user).exists()
+    
+    # Fetch comments, ensuring the user profile is pre-fetched for efficiency
+    post_comments = Comment.objects.filter(post=post).select_related('user__profile').order_by('created_at')
+
     context = {
         'post': post,
         'comment_form': comment_form,
-        # Fetch comments for display in the template
-        'comments': Comment.objects.filter(post=post).select_related('user').order_by('created_at')
+        # Pass the prepared comments list
+        'comments': post_comments, 
     }
+    
+    # 4. Final Render
     return render(request, "accounts/view_post.html", context)
