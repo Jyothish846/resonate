@@ -11,13 +11,13 @@
     <p class="page-subtitle">Search for musicians by username, instrument, or what they write in their bio.</p>
 
 <div class="search-form-group">
-    <form method="GET" action="{% url 'accounts:search_musicians' %}" class="search-form">
+    <form method="GET" action="{% url 'accounts:search' %}" class="search-form">
         
         
         <div class="search-input-wrapper">
             <input type="text" name="q" placeholder="Search by username, instrument, or bio..." 
-                   value="{{ query|default_if_none:'' }}" 
-                   class="search-input">
+                    value="{{ query|default_if_none:'' }}" 
+                    class="search-input">
             
             <button type="submit" class="btn btn-primary search-button-inside">
                 Search
@@ -32,7 +32,7 @@
         {% if results %}
             <h3 class="results-count">Found {{ results|length }} result{{ results|length|pluralize }}</h3>
             {% for profile in results %}
-            <a href="{% url 'accounts:profile_with_username' profile.user.username %}" class="search-result-card">
+            <a href="{% url 'accounts:profile' profile.user.username %}" class="search-result-card">
                 {% if profile.avatar %}
                     <img src="{{ profile.avatar.url }}" alt="{{ profile.user.username }} avatar" class="result-avatar">
                 {% else %}

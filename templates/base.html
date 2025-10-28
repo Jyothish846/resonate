@@ -6,39 +6,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Resonate{% endblock %}</title>
 
-    {# CRITICAL FIX: Load style.css using the full static path (static/css/style.css), 
-       and add a cache-busting version number (v=1.2) to force the browser 
-       to download the latest file instead of using old, cached versions. #}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/global-light.css' %}">
+    {# Add Poppins font link as defined in style.css #}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    {% block extra_head %}{% endblock %}
+    {% block extra_head %}{% endblock %} 
 </head>
-<body>
+<body style="background-color: #f8f9fa;">
+    {# CRITICAL FIX: Added inline style to force light background color override. #}
+    
     <header class="navbar">
-        <div class="logo">Resonate</div>
-        <nav class="nav-links">
-            {% if user.is_authenticated %}
-                <a href="{% url 'feed' %}">Feed</a>
-                <a href="{% url 'search' %}">Search</a>
-            {% endif %}
-        </nav>
-        <div class="user-actions">
-            {% if user.is_authenticated %}
-                <a href="{% url 'create_post' %}" class="btn-primary">Create Post</a>
-                <a href="{% url 'profile' user.username %}" class="user-link">{{ user.username }}</a>
-                <a href="{% url 'logout' %}" class="user-link">Logout</a>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn-primary">Login / Sign Up</a>
-            {% endif %}
+        <div class="nav-content-wrapper">
+            {# The original navbar structure was missing nav-content-wrapper and nav-left/right divisions #}
+            <div class="nav-left">
+                <a href="{% url 'accounts:feed' %}" class="brand">
+                    {# Using a temporary placeholder image since local static files aren't available #}
+                    <img src="{% static 'accounts/logo.png' %}" alt="Resonate Logo" class="brand-icon"> 
+                    <span class="brand-name">Resonate</span>
+                </a>
+            </div>
+
+            <div class="nav-right">
+                <nav class="nav-links">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'accounts:feed' %}">Feed</a>
+                        <a href="{% url 'accounts:search' %}">Search</a>
+                    {% endif %}
+                </nav>
+                <div class="user-actions">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'accounts:post_create' %}" class="btn btn-sm btn-primary">Create Post</a>
+                        <a href="{% url 'inbox' %}">Messages</a>
+                        <a href="{% url 'accounts:profile' user.username %}" class="user-link">{{ user.username }}</a>
+                        <a href="{% url 'accounts:logout' %}" class="user-link">Logout</a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-primary">Login / Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </header>
 
-    <main class="container">
-        {% block content %}
-        {% endblock %}
+    <main class="page-content">
+        {# CRITICAL FIX: Changed class="container" to class="page-content" to match style.css #}
+        <div class="content-wrapper">
+            {# All page content should be wrapped in content-wrapper as per style.css #}
+            {% block content %}
+            {% endblock %}
+        </div>
     </main>
 
-    <footer class="footer">
+    <footer class="app-footer">
+        {# CRITICAL FIX: Changed class="footer" to class="app-footer" to match style.css #}
         &copy; 2025 Resonate. All rights reserved.
     </footer>
 

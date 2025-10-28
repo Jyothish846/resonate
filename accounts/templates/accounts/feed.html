@@ -17,7 +17,8 @@
                     
                     {% if post.author %} 
                         
-                        <a href="{% url 'accounts:profile_with_username' post.author.username %}">
+                        {# 🎯 FIX 1: Changed 'accounts:profile_with_username' to the correct 'accounts:profile' #}
+                        <a href="{% url 'accounts:profile' post.author.username %}">
                             
                             {% if post.author.profile.avatar %}
                                 <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}'s avatar" class="post-avatar">
@@ -26,12 +27,13 @@
                             {% endif %}
                         </a>
                         <div class="post-meta">
-                            <a href="{% url 'accounts:profile_with_username' post.author.username %}" class="post-username">{{ post.author.username }}</a>
+                            {# 🎯 FIX 2: Changed 'accounts:profile_with_username' to the correct 'accounts:profile' #}
+                            <a href="{% url 'accounts:profile' post.author.username %}" class="post-username">{{ post.author.username }}</a>
                             <span class="post-timestamp">{{ post.created_at|timesince }} ago</span>
                         </div>
                     
                     {% else %}
-                       
+                        
                         <img src="{% static 'accounts/default-profile.png' %}" alt="Deleted User" class="post-avatar">
                         <div class="post-meta">
                             <span class="post-username deleted-user-text">Deleted User</span>
@@ -52,7 +54,7 @@
                     <p class="post-caption">{{ post.description }}</p>
                     
                 </a>
-               
+                
 
                 <div class="post-actions">
                     

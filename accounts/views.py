@@ -21,7 +21,7 @@ def signup_view(request):
             user = form.save()
             Profile.objects.create(user=user)
             login(request, user)
-            return redirect("accounts:profile")
+            return redirect("accounts:my_profile") 
     else:
         form = SignUpForm()
     return render(request, "accounts/signup.html", {"form": form})
@@ -34,7 +34,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return redirect("accounts:profile")
+            return redirect("accounts:my_profile")
         else:
             return render(request, "accounts/login.html", {"error": "Invalid credentials"})
     return render(request, "accounts/login.html")
@@ -53,7 +53,7 @@ def profile_view(request, username=None):
     if username:
         profile_user = get_object_or_404(Profile, user__username=username).user
     else:
-        profile_user = request.user
+        profile_user = request.user 
 
     profile, created = Profile.objects.get_or_create(user=profile_user)
     posts = Post.objects.filter(author=profile_user).order_by('-created_at')
@@ -72,10 +72,11 @@ def profile_view(request, username=None):
         if post_id and comment_text:
             post = get_object_or_404(Post, id=post_id)
             Comment.objects.create(user=request.user, post=post, text=comment_text)
+            
             if username:
-                return redirect("accounts:profile_with_username", username=username)
+                return redirect("accounts:profile", username=username) 
             else:
-                return redirect("accounts:profile")
+                return redirect("accounts:my_profile") 
 
     liked_posts = set(
         Like.objects.filter(user=request.user, post__in=posts).values_list("post_id", flat=True)
@@ -111,7 +112,7 @@ def edit_profile(request):
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            return redirect('accounts:profile_with_username', username=request.user.username)
+            return redirect('accounts:profile', username=request.user.username) 
     else:
         form = ProfileForm(instance=profile)
 
@@ -122,12 +123,8 @@ def edit_profile(request):
 
 
 #follow
-
-
-
 @login_required
 def follow_toggle(request, username):
-   
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
@@ -161,7 +158,6 @@ def follow_toggle(request, username):
 
 
 #posts
-
 @login_required
 def post_create(request):
     if request.method == "POST":
@@ -170,7 +166,7 @@ def post_create(request):
             post = form.save(commit=False)
             post.author = request.user
             post.save()
-            return redirect("accounts:profile")
+            return redirect("accounts:my_profile") 
     else:
         form = PostForm()
     return render(request, "accounts/post_create.html", {"form": form})
@@ -181,12 +177,12 @@ def delete_post(request, post_id):
 
     if post.author != request.user:
         messages.error(request, "You are not allowed to delete this post.")
-        return redirect('accounts:profile')
+        return redirect('accounts:my_profile')
 
     if request.method == 'POST':
         post.delete()
         messages.success(request, "Post deleted successfully!")
-        return redirect('accounts:profile')
+        return redirect('accounts:my_profile')
 
     return render(request, 'accounts/delete_post.html', {'post': post})
 
@@ -217,7 +213,6 @@ def feed(request):
     })
 
 #like & comment
-
 @login_required
 def like_toggle(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -273,7 +268,7 @@ def musician_detail(request, user_id):
 
     is_following = Follow.objects.filter(follower=request.user, following=musician).exists()
 
-   
+    
     if request.method == "POST":
         if "comment" in request.POST:
             post_id = request.POST.get("post_id")
@@ -298,7 +293,6 @@ def musician_detail(request, user_id):
 
 
 #search
-
 def search_musicians(request):
     query = request.GET.get("q", "")
     if query:
