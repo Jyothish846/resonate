@@ -3,17 +3,24 @@ import os
 from pathlib import Path
 from decouple import config, Csv
 
-
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# ----------------------------------------------------------------------
+# ENVIRONMENT & SECURITY CONFIGURATION
+# ----------------------------------------------------------------------
 
 SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 if DEBUG:
+    # Local Development: Allow localhost and standard IP addresses
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '::1']
     CSRF_TRUSTED_ORIGINS = []
 else:
+    # Production configuration
     ALLOWED_HOSTS_STRING = config('ALLOWED_HOSTS', default='')
     ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STRING.split(',') if host.strip()]
     CSRF_TRUSTED_ORIGINS = ['https://' + host for host in ALLOWED_HOSTS]
@@ -21,12 +28,19 @@ else:
     if RENDER_URL and 'https://' + RENDER_URL not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append('https://' + RENDER_URL)
         
+    # Force connection over HTTPS
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     DEBUG_PROPAGATE_EXCEPTIONS = True
 
+# ----------------------------------------------------------------------
+# END ENVIRONMENT & SECURITY CONFIGURATION
+# ----------------------------------------------------------------------
+
+
+# Application definition
 INSTALLED_APPS = [ 
     'whitenoise.runserver_nostatic', 
     'django.contrib.admin',
@@ -35,6 +49,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Removed 'storages' as it is not needed for FileSystemStorage.
+    
+    # Project Apps
     'accounts',
     'channels',
     'chat',
@@ -71,6 +89,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'resonate.wsgi.application'
 
+# ----------------------------------------------------------------------
+# DATABASES CONFIGURATION
+# ----------------------------------------------------------------------
+
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
     'default': dj_database_url.config(
@@ -79,7 +101,6 @@ if 'DATABASE_URL' in os.environ:
         conn_health_checks=True,
         )
     }
-
 else:
     DATABASES = {
         'default': {
@@ -87,6 +108,11 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+# ----------------------------------------------------------------------
+# END DATABASES CONFIGURATION
+# ----------------------------------------------------------------------
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -109,6 +135,11 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+
+# ----------------------------------------------------------------------
+# STATIC & MEDIA FILES CONFIGURATION (MINI-PROJECT/EPHEMERAL MEDIA)
+# ----------------------------------------------------------------------
+
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles" 
 
@@ -122,19 +153,23 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media" 
+
+# FIX: Simple, universal storage configuration.
+# WARNING: Media files (user uploads) will be lost on deployment/restart on Render.
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
-    
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
-MEDIA_URL = "/media/"
-
-MEDIA_ROOT = BASE_DIR / "media"
+# ----------------------------------------------------------------------
+# END STATIC & MEDIA FILES CONFIGURATION
+# ----------------------------------------------------------------------
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
